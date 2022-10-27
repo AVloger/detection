@@ -1,5 +1,5 @@
 <template>
-  <div class="myLive">
+  <div class="myLive" id = myLive>
     <div class="top_button">
       <!--开启摄像头-->
       <Button
@@ -72,20 +72,20 @@
                 :data="feature_list"
                 height="390"
                 border
-                style="width: 740px; text-align: center"
+                style="width: 800px; text-align: center"
                 v-loading="loading"
                 element-loading-text="数据正在处理中，请耐心等待"
                 element-loading-spinner="el-icon-loading"
                 lazy
                 :row-class-name="tableRowClassName"
               >
-                <el-table-column prop="object" label="目标类别" width="370px">
+                <el-table-column prop="object" label="目标类别" width="400px">
                   <template slot-scope="scope">
                     <span>{{ scope.row[2] }}</span>
                   </template>
                 </el-table-column>
 
-                <el-table-column prop="confidence" label="置信度" width="370px">
+                <el-table-column prop="confidence" label="置信度" width="400px">
                   <template slot-scope="scope">
                     <span v-if = "scope.row[1]<40" style="color: red">{{ scope.row[1] }}</span>
                     <span v-else style="color: #2D2D3F">{{ scope.row[1] }}</span>
@@ -215,17 +215,6 @@ export default {
 .el-table .success-row {
   background: #f0f9eb;
 }
-.dialog_info {
-  margin: 20px auto;
-}
-
-.text {
-  font-size: 14px;
-}
-
-.item {
-  margin-bottom: 18px;
-}
 
 .clearfix:before,
 .clearfix:after {
@@ -243,16 +232,27 @@ export default {
   border-radius: 8px;
   margin-top: -20px;
 }
+#myLive {
+  width: 50%;
+  height: 100%;
+  background-color: #ffffff;
+  margin: 15px auto;
+  display: flex;
+  flex-wrap: wrap;
 
+  flex-direction: column;
+  justify-content: center; /* 水平居中 */
+  align-items: center;     /* 垂直居中 */
+
+}
 #CT {
   display: flex;
-  height: 100%;
   width: 100%;
   flex-wrap: wrap;
-  justify-content: center;
-  margin: 0 auto;
-  margin-right: -1%;
-  max-width: 1800px;
+  flex-direction: column;
+  justify-content: center; /* 水平居中 */
+  align-items: center;     /* 垂直居中 */
+
 }
 
 #CT_image_1 {
@@ -260,14 +260,20 @@ export default {
   height: 40%;
   margin: 0px auto;
   padding: 0px auto;
-  margin-right: 180px;
-  margin-bottom: 0px;
+  align-self: center;
   border-radius: 4px;
 }
 
+#info_patient {
+  width: 850px;
+  height: 40%;
+  margin-top: 40px;
+  align-self: center;
+  border-radius: 4px;
+}
 #CT_image {
   margin-bottom: 60px;
-  margin-left: 30px;
+
   margin-top: 5px;
 }
 
@@ -320,18 +326,6 @@ div {
   color: #187aab;
 }
 
-#myLive {
-  width: 85%;
-  height: 800px;
-  background-color: #ffffff;
-  margin: 15px auto;
-  display: flex;
-  min-width: 1200px;
-}
 
 
-#info_patient {
-  margin-top: 60px;
-  margin-right: 160px;
-}
 </style>

@@ -2,8 +2,17 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="67ef000d-be47-4975-a0d1-fded85a8563c" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/back-end/models/export.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/back-end/weights/best.pt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/models/common.py" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/models/common.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/models/experimental.py" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/models/experimental.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/models/yolo.py" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/models/yolo.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/models/yolov5m.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/models/yolov5m.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/processor/AIDetector_pytorch.py" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/processor/AIDetector_pytorch.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/processor/Detect.py" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/processor/Detect.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front-end/src/components/WebCamera.vue" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/components/WebCamera.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front-end/src/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/src/main.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -28,7 +37,7 @@
   <component name="ProjectId" id="2GKywaUkDdlzqUSqBkmW7R0WyiN" />
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/front-end/src" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/back-end/weights" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
@@ -37,11 +46,11 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\ASUS\Desktop\mydetection\detection\back-end\weights" />
+      <recent name="C:\Users\ASUS\Desktop\mydetection\detection\back-end\models" />
       <recent name="C:\Users\ASUS\Desktop\mydetection\detection\front-end\src" />
       <recent name="C:\Users\ASUS\Desktop\mydetection\detection\front-end\src\assets" />
       <recent name="C:\Users\ASUS\Desktop\mydetection\detection\front-end\src\components" />
-      <recent name="C:\Users\ASUS\Desktop\mydetection\detection\back-end" />
-      <recent name="C:\Users\ASUS\Desktop\mydetection\detection\front-end" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -125,7 +134,9 @@
       <workItem from="1666503486034" duration="13000" />
       <workItem from="1666503507821" duration="978000" />
       <workItem from="1666504539144" duration="6192000" />
-      <workItem from="1666516251624" duration="19860000" />
+      <workItem from="1666516251624" duration="21233000" />
+      <workItem from="1666769572607" duration="2233000" />
+      <workItem from="1666853417825" duration="4094000" />
     </task>
     <task id="LOCAL-00001" summary="unknown">
       <created>1666516419038</created>
@@ -155,7 +166,14 @@
       <option name="project" value="LOCAL" />
       <updated>1666618611185</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="version 1">
+      <created>1666752072921</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1666752072921</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -181,7 +199,7 @@
     <option name="LAST_COMMIT_MESSAGE" value="version 1" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/detection$app.coverage" NAME="app Coverage Results" MODIFIED="1666602179134" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/back-end" />
+    <SUITE FILE_PATH="coverage/detection$app.coverage" NAME="app Coverage Results" MODIFIED="1666853487261" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/back-end" />
     <SUITE FILE_PATH="coverage/Yolov5_Flask_VUE_master$app.coverage" NAME="app Coverage Results" MODIFIED="1666156750522" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/back-end" />
   </component>
 </project>

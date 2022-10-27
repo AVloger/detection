@@ -14,7 +14,7 @@ class VideoCamera(object):
         self.threshold = 0.4
         self.max_frame = 160
         self.video = cv2.VideoCapture("C:\\Users\\ASUS\\Desktop\\Yolov5-Flask-VUE-master\\Yolov5-Flask-VUE-master\\back-end\\uploads\\downloadVideo.mp4")  #换成自己的视频文件
-        self.weights = 'weights/final.pt'   #yolov5权重文件
+        self.weights = 'weights/best.pt'   #yolov5权重文件
         self.device = '0' if torch.cuda.is_available() else 'cpu'
         self.device = select_device(self.device)
         model = attempt_load(self.weights, map_location=self.device)
