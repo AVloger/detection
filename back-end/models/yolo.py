@@ -1,20 +1,23 @@
-import math
+import argparse
+import logging
 import sys
 from copy import deepcopy
 from pathlib import Path
 
 sys.path.append('./')  # to run '$ python *.py' files in subdirectories
+logger = logging.getLogger(__name__)
 
-import torch
-import torch.nn as nn
-
-from models.common import Conv, Bottleneck, SPP, DWConv, Focus, BottleneckCSP, Concat, NMS
-from models.experimental import MixConv2d, CrossConv, C3
+from models.common import *
+from models.experimental import MixConv2d, CrossConv
 from utils.autoanchor import check_anchor_order
-from utils.general import make_divisible
-from utils.torch_utils import time_synchronized, fuse_conv_and_bn, model_info, scale_img, initialize_weights
+from utils.general import make_divisible, check_file, set_logging
+from utils.torch_utils import time_synchronized, fuse_conv_and_bn, model_info, scale_img, initialize_weights, \
+    select_device, copy_attr
 
-thop = None
+try:
+    import thop  # for FLOPS computation
+except ImportError:
+    thop = None
 
 
 class Detect(nn.Module):
@@ -60,7 +63,7 @@ class Detect(nn.Module):
 
 
 class Model(nn.Module):
-    def __init__(self, cfg='yolov5m.yaml', ch=3, nc=None):  # model, input channels, number of classes
+    def __init__(self, cfg='yolov5s.yaml', ch=3, nc=None):  # model, input channels, number of classes
         super(Model, self).__init__()
         if isinstance(cfg, dict):
             self.yaml = cfg  # model dict
@@ -71,15 +74,18 @@ class Model(nn.Module):
                 self.yaml = yaml.load(f, Loader=yaml.FullLoader)  # model dict
 
         # Define model
+        ch = self.yaml['ch'] = self.yaml.get('ch', ch)  # input channels
         if nc and nc != self.yaml['nc']:
+            logger.info('Overriding model.yaml nc=%g with nc=%g' % (self.yaml['nc'], nc))
             self.yaml['nc'] = nc  # override yaml value
-        self.model, self.save = parse_model(deepcopy(self.yaml), ch=[ch])  # model, savelist, ch_out
+        self.model, self.save = parse_model(deepcopy(self.yaml), ch=[ch])  # model, savelist
+        self.names = [str(i) for i in range(self.yaml['nc'])]  # default names
         # print([x.shape for x in self.forward(torch.zeros(1, ch, 64, 64))])
 
         # Build strides, anchors
         m = self.model[-1]  # Detect()
         if isinstance(m, Detect):
-            s = 128  # 2x min stride
+            s = 256  # 2x min stride
             m.stride = torch.tensor([s / x.shape[-2] for x in self.forward(torch.zeros(1, ch, s, s))])  # forward
             m.anchors /= m.stride.view(-1, 1, 1)
             check_anchor_order(m)
@@ -90,6 +96,7 @@ class Model(nn.Module):
         # Init weights, biases
         initialize_weights(self)
         self.info()
+        logger.info('')
 
     def forward(self, x, augment=False, profile=False):
         if augment:
@@ -98,7 +105,7 @@ class Model(nn.Module):
             f = [None, 3, None]  # flips (2-ud, 3-lr)
             y = []  # outputs
             for si, fi in zip(s, f):
-                xi = scale_img(x.flip(fi) if fi else x, si)
+                xi = scale_img(x.flip(fi) if fi else x, si, gs=int(self.stride.max()))
                 yi = self.forward_once(xi)[0]  # forward
                 # cv2.imwrite('img%g.jpg' % s, 255 * xi[0].numpy().transpose((1, 2, 0))[:, :, ::-1])  # save
                 yi[..., :4] /= si  # de-scale
@@ -138,8 +145,8 @@ class Model(nn.Module):
         m = self.model[-1]  # Detect() module
         for mi, s in zip(m.m, m.stride):  # from
             b = mi.bias.view(m.na, -1)  # conv.bias(255) to (3,85)
-            b[:, 4] += math.log(8 / (640 / s) ** 2)  # obj (8 objects per 640 image)
-            b[:, 5:] += math.log(0.6 / (m.nc - 0.99)) if cf is None else torch.log(cf / cf.sum())  # cls
+            b.data[:, 4] += math.log(8 / (640 / s) ** 2)  # obj (8 objects per 640 image)
+            b.data[:, 5:] += math.log(0.6 / (m.nc - 0.99)) if cf is None else torch.log(cf / cf.sum())  # cls
             mi.bias = torch.nn.Parameter(b.view(-1), requires_grad=True)
 
     def _print_biases(self):
@@ -177,11 +184,18 @@ class Model(nn.Module):
             self.model = self.model[:-1]  # remove
         return self
 
+    def autoshape(self):  # add autoShape module
+        print('Adding autoShape... ')
+        m = autoShape(self)  # wrap model
+        copy_attr(m, self, include=('yaml', 'nc', 'hyp', 'names', 'stride'), exclude=())  # copy attributes
+        return m
+
     def info(self, verbose=False, img_size=640):  # print model information
         model_info(self, verbose, img_size)
 
 
 def parse_model(d, ch):  # model_dict, input_channels(3)
+    logger.info('\n%3s%18s%3s%10s  %-40s%-30s' % ('', 'from', 'n', 'params', 'module', 'arguments'))
     anchors, nc, gd, gw = d['anchors'], d['nc'], d['depth_multiple'], d['width_multiple']
     na = (len(anchors[0]) // 2) if isinstance(anchors, list) else anchors  # number of anchors
     no = na * (nc + 5)  # number of outputs = anchors * (classes + 5)
@@ -224,21 +238,49 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
         elif m is nn.BatchNorm2d:
             args = [ch[f]]
         elif m is Concat:
-            c2 = sum([ch[-1 if x == -1 else x + 1] for x in f])
+            c2 = sum([ch[x if x < 0 else x + 1] for x in f])
         elif m is Detect:
             args.append([ch[x + 1] for x in f])
             if isinstance(args[1], int):  # number of anchors
                 args[1] = [list(range(args[1] * 2))] * len(f)
+        elif m is Contract:
+            c2 = ch[f if f < 0 else f + 1] * args[0] ** 2
+        elif m is Expand:
+            c2 = ch[f if f < 0 else f + 1] // args[0] ** 2
         else:
-            c2 = ch[f]
+            c2 = ch[f if f < 0 else f + 1]
 
         m_ = nn.Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)  # module
         t = str(m)[8:-2].replace('__main__.', '')  # module type
         np = sum([x.numel() for x in m_.parameters()])  # number params
         m_.i, m_.f, m_.type, m_.np = i, f, t, np  # attach index, 'from' index, type, number params
+        logger.info('%3s%18s%3s%10.0f  %-40s%-30s' % (i, f, n, np, t, args))  # print
         save.extend(x % i for x in ([f] if isinstance(f, int) else f) if x != -1)  # append to savelist
         layers.append(m_)
         ch.append(c2)
     return nn.Sequential(*layers), sorted(save)
 
 
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--cfg', type=str, default='yolov5s.yaml', help='model.yaml')
+    parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
+    opt = parser.parse_args()
+    opt.cfg = check_file(opt.cfg)  # check file
+    set_logging()
+    device = select_device(opt.device)
+
+    # Create model
+    model = Model(opt.cfg).to(device)
+    model.train()
+
+    # Profile
+    # img = torch.rand(8 if torch.cuda.is_available() else 1, 3, 640, 640).to(device)
+    # y = model(img, profile=True)
+
+    # Tensorboard
+    # from torch.utils.tensorboard import SummaryWriter
+    # tb_writer = SummaryWriter()
+    # print("Run 'tensorboard --logdir=models/runs' to view tensorboard at http://localhost:6006/")
+    # tb_writer.add_graph(model.model, img)  # add model to tensorboard
+    # tb_writer.add_image('test', img[0], dataformats='CWH')  # add model to tensorboard

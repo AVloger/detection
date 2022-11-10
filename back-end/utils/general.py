@@ -1,8 +1,9 @@
 # General utils
 
 import glob
+import logging
+import math
 import os
-import platform
 import random
 import re
 import subprocess
@@ -10,7 +11,6 @@ import time
 from pathlib import Path
 
 import cv2
-import math
 import numpy as np
 import torch
 import torchvision
@@ -22,13 +22,19 @@ from utils.torch_utils import init_torch_seeds
 
 # Settings
 torch.set_printoptions(linewidth=320, precision=5, profile='long')
-# format short g, %precision=5
-np.set_printoptions(linewidth=320, formatter={'float_kind': '{:11.5g}'.format})
-# prevent OpenCV from multithreading (incompatible with PyTorch DataLoader)
-cv2.setNumThreads(0)
+np.set_printoptions(linewidth=320, formatter={'float_kind': '{:11.5g}'.format})  # format short g, %precision=5
+cv2.setNumThreads(0)  # prevent OpenCV from multithreading (incompatible with PyTorch DataLoader)
+os.environ['NUMEXPR_MAX_THREADS'] = str(min(os.cpu_count(), 8))  # NumExpr max threads
+
+
+def set_logging(rank=-1):
+    logging.basicConfig(
+        format="%(message)s",
+        level=logging.INFO if rank in [-1, 0] else logging.WARN)
 
 
 def init_seeds(seed=0):
+    # Initialize random number generator (RNG) seeds
     random.seed(seed)
     np.random.seed(seed)
     init_torch_seeds(seed)
@@ -40,21 +46,47 @@ def get_latest_run(search_dir='.'):
     return max(last_list, key=os.path.getctime) if last_list else ''
 
 
+def check_online():
+    # Check internet connectivity
+    import socket
+    try:
+        socket.create_connection(("1.1.1.1", 53))  # check host accesability
+        return True
+    except OSError:
+        return False
+
+
 def check_git_status():
-    # Suggest 'git pull' if repo is out of date
-    if platform.system() in ['Linux', 'Darwin'] and not os.path.isfile('/.dockerenv'):
-        s = subprocess.check_output(
-            'if [ -d .git ]; then git fetch && git status -uno; fi', shell=True).decode('utf-8')
-        if 'Your branch is behind' in s:
-            print(s[s.find('Your branch is behind'):s.find('\n\n')] + '\n')
+    # Recommend 'git pull' if code is out of date
+    print(colorstr('github: '), end='')
+    try:
+        if Path('.git').exists() and not Path('/workspace').exists() and check_online():  # not exist '/.dockerenv'
+            url = subprocess.check_output(
+                'git fetch && git config --get remote.origin.url', shell=True).decode('utf-8')[:-1]
+            n = int(subprocess.check_output(
+                'git rev-list $(git rev-parse --abbrev-ref HEAD)..origin/master --count', shell=True))  # commits behind
+            if n > 0:
+                print(f"⚠️ WARNING: code is out of date by {n} {'commits' if n > 1 else 'commmit'}. "
+                      f"Use 'git pull' to update or 'git clone {url}' to download latest.")
+            else:
+                print(f'up to date with {url} ✅')
+    except Exception as e:
+        print(e)
+
+
+def check_requirements(file='requirements.txt'):
+    # Check installed dependencies meet requirements
+    import pkg_resources
+    requirements = pkg_resources.parse_requirements(Path(file).open())
+    requirements = [x.name + ''.join(*x.specs) if len(x.specs) else x.name for x in requirements]
+    pkg_resources.require(requirements)  # DistributionNotFound or VersionConflict exception if requirements not met
 
 
 def check_img_size(img_size, s=32):
     # Verify img_size is a multiple of stride s
     new_size = make_divisible(img_size, int(s))  # ceil gs-multiple
     if new_size != img_size:
-        print('WARNING: --img-size %g must be multiple of max stride %g, updating to %g' %
-              (img_size, s, new_size))
+        print('WARNING: --img-size %g must be multiple of max stride %g, updating to %g' % (img_size, s, new_size))
     return new_size
 
 
@@ -65,8 +97,7 @@ def check_file(file):
     else:
         files = glob.glob('./**/' + file, recursive=True)  # find file
         assert len(files), 'File Not Found: %s' % file  # assert file was found
-        assert len(files) == 1, "Multiple files match '%s', specify exact path: %s" % (
-            file, files)  # assert unique
+        assert len(files) == 1, "Multiple files match '%s', specify exact path: %s" % (file, files)  # assert unique
         return files[0]  # return file
 
 
@@ -74,22 +105,18 @@ def check_dataset(dict):
     # Download dataset if not found locally
     val, s = dict.get('val'), dict.get('download')
     if val and len(val):
-        val = [Path(x).resolve()
-               for x in (val if isinstance(val, list) else [val])]  # val path
+        val = [Path(x).resolve() for x in (val if isinstance(val, list) else [val])]  # val path
         if not all(x.exists() for x in val):
-            print('\nWARNING: Dataset not found, nonexistent paths: %s' %
-                  [str(x) for x in val if not x.exists()])
+            print('\nWARNING: Dataset not found, nonexistent paths: %s' % [str(x) for x in val if not x.exists()])
             if s and len(s):  # download script
                 print('Downloading %s ...' % s)
                 if s.startswith('http') and s.endswith('.zip'):  # URL
                     f = Path(s).name  # filename
                     torch.hub.download_url_to_file(s, f)
-                    r = os.system('unzip -q %s -d ../ && rm %s' %
-                                  (f, f))  # unzip
+                    r = os.system('unzip -q %s -d ../ && rm %s' % (f, f))  # unzip
                 else:  # bash script
                     r = os.system(s)
-                print('Dataset autodownload %s\n' % ('success' if r ==
-                                                     0 else 'failure'))  # analyze return value
+                print('Dataset autodownload %s\n' % ('success' if r == 0 else 'failure'))  # analyze return value
             else:
                 raise Exception('Dataset not found.')
 
@@ -97,6 +124,41 @@ def check_dataset(dict):
 def make_divisible(x, divisor):
     # Returns x evenly divisible by divisor
     return math.ceil(x / divisor) * divisor
+
+
+def clean_str(s):
+    # Cleans a string by replacing special characters with underscore _
+    return re.sub(pattern="[|@#!¡·$€%&()=?¿^*;:,¨´><+]", repl="_", string=s)
+
+
+def one_cycle(y1=0.0, y2=1.0, steps=100):
+    # lambda function for sinusoidal ramp from y1 to y2
+    return lambda x: ((1 - math.cos(x * math.pi / steps)) / 2) * (y2 - y1) + y1
+
+
+def colorstr(*input):
+    # Colors a string https://en.wikipedia.org/wiki/ANSI_escape_code, i.e.  colorstr('blue', 'hello world')
+    *args, string = input if len(input) > 1 else ('blue', 'bold', input[0])  # color arguments, string
+    colors = {'black': '\033[30m',  # basic colors
+              'red': '\033[31m',
+              'green': '\033[32m',
+              'yellow': '\033[33m',
+              'blue': '\033[34m',
+              'magenta': '\033[35m',
+              'cyan': '\033[36m',
+              'white': '\033[37m',
+              'bright_black': '\033[90m',  # bright colors
+              'bright_red': '\033[91m',
+              'bright_green': '\033[92m',
+              'bright_yellow': '\033[93m',
+              'bright_blue': '\033[94m',
+              'bright_magenta': '\033[95m',
+              'bright_cyan': '\033[96m',
+              'bright_white': '\033[97m',
+              'end': '\033[0m',  # misc
+              'bold': '\033[1m',
+              'underline': '\033[4m'}
+    return ''.join(colors[x] for x in args) + f'{string}' + colors['end']
 
 
 def labels_to_class_weights(labels, nc=80):
@@ -120,8 +182,7 @@ def labels_to_class_weights(labels, nc=80):
 
 def labels_to_image_weights(labels, nc=80, class_weights=np.ones(80)):
     # Produces image weights based on class_weights and image contents
-    class_counts = np.array(
-        [np.bincount(x[:, 0].astype(np.int), minlength=nc) for x in labels])
+    class_counts = np.array([np.bincount(x[:, 0].astype(np.int), minlength=nc) for x in labels])
     image_weights = (class_weights.reshape(1, nc) * class_counts).sum(1)
     # index = random.choices(range(n), weights=image_weights, k=1)  # weight image sample
     return image_weights
@@ -162,10 +223,8 @@ def xywh2xyxy(x):
 def scale_coords(img1_shape, coords, img0_shape, ratio_pad=None):
     # Rescale coords (xyxy) from img1_shape to img0_shape
     if ratio_pad is None:  # calculate from img0_shape
-        gain = min(img1_shape[0] / img0_shape[0],
-                   img1_shape[1] / img0_shape[1])  # gain  = old / new
-        pad = (img1_shape[1] - img0_shape[1] * gain) / \
-            2, (img1_shape[0] - img0_shape[0] * gain) / 2  # wh padding
+        gain = min(img1_shape[0] / img0_shape[0], img1_shape[1] / img0_shape[1])  # gain  = old / new
+        pad = (img1_shape[1] - img0_shape[1] * gain) / 2, (img1_shape[0] - img0_shape[0] * gain) / 2  # wh padding
     else:
         gain = ratio_pad[0][0]
         pad = ratio_pad[1]
@@ -210,8 +269,7 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=
 
     iou = inter / union
     if GIoU or DIoU or CIoU:
-        # convex (smallest enclosing box) width
-        cw = torch.max(b1_x2, b2_x2) - torch.min(b1_x1, b2_x1)
+        cw = torch.max(b1_x2, b2_x2) - torch.min(b1_x1, b2_x1)  # convex (smallest enclosing box) width
         ch = torch.max(b1_y2, b2_y2) - torch.min(b1_y1, b2_y1)  # convex height
         if CIoU or DIoU:  # Distance or Complete IoU https://arxiv.org/abs/1911.08287v1
             c2 = cw ** 2 + ch ** 2 + eps  # convex diagonal squared
@@ -220,8 +278,7 @@ def bbox_iou(box1, box2, x1y1x2y2=True, GIoU=False, DIoU=False, CIoU=False, eps=
             if DIoU:
                 return iou - rho2 / c2  # DIoU
             elif CIoU:  # https://github.com/Zzh-tju/DIoU-SSD-pytorch/blob/master/utils/box/box_utils.py#L47
-                v = (4 / math.pi ** 2) * \
-                    torch.pow(torch.atan(w2 / h2) - torch.atan(w1 / h1), 2)
+                v = (4 / math.pi ** 2) * torch.pow(torch.atan(w2 / h2) - torch.atan(w1 / h1), 2)
                 with torch.no_grad():
                     alpha = v / ((1 + eps) - iou + v)
                 return iou - (rho2 / c2 + v * alpha)  # CIoU
@@ -253,10 +310,8 @@ def box_iou(box1, box2):
     area2 = box_area(box2.T)
 
     # inter(N,M) = (rb(N,M,2) - lt(N,M,2)).clamp(0).prod(2)
-    inter = (torch.min(box1[:, None, 2:], box2[:, 2:]) -
-             torch.max(box1[:, None, :2], box2[:, :2])).clamp(0).prod(2)
-    # iou = inter / (area1 + area2 - inter)
-    return inter / (area1[:, None] + area2 - inter)
+    inter = (torch.min(box1[:, None, 2:], box2[:, 2:]) - torch.max(box1[:, None, :2], box2[:, :2])).clamp(0).prod(2)
+    return inter / (area1[:, None] + area2 - inter)  # iou = inter / (area1 + area2 - inter)
 
 
 def wh_iou(wh1, wh2):
@@ -264,31 +319,30 @@ def wh_iou(wh1, wh2):
     wh1 = wh1[:, None]  # [N,1,2]
     wh2 = wh2[None]  # [1,M,2]
     inter = torch.min(wh1, wh2).prod(2)  # [N,M]
-    # iou = inter / (area1 + area2 - inter)
-    return inter / (wh1.prod(2) + wh2.prod(2) - inter)
+    return inter / (wh1.prod(2) + wh2.prod(2) - inter)  # iou = inter / (area1 + area2 - inter)
 
 
-def non_max_suppression(prediction, conf_thres=0.1, iou_thres=0.6, classes=None, agnostic=False, labels=()):
+def non_max_suppression(prediction, conf_thres=0.25, iou_thres=0.45, classes=None, agnostic=False, labels=()):
     """Performs Non-Maximum Suppression (NMS) on inference results
 
     Returns:
          detections with shape: nx6 (x1, y1, x2, y2, conf, cls)
     """
 
-    nc = prediction[0].shape[1] - 5  # number of classes
+    nc = prediction.shape[2] - 5  # number of classes
     xc = prediction[..., 4] > conf_thres  # candidates
 
     # Settings
-    # (pixels) minimum and maximum box width and height
-    min_wh, max_wh = 2, 4096
+    min_wh, max_wh = 2, 4096  # (pixels) minimum and maximum box width and height
     max_det = 300  # maximum number of detections per image
+    max_nms = 30000  # maximum number of boxes into torchvision.ops.nms()
     time_limit = 10.0  # seconds to quit after
     redundant = True  # require redundant detections
     multi_label = nc > 1  # multiple labels per box (adds 0.5ms/img)
     merge = False  # use merge-NMS
 
     t = time.time()
-    output = [torch.zeros(0, 6)] * prediction.shape[0]
+    output = [torch.zeros((0, 6), device=prediction.device)] * prediction.shape[0]
     for xi, x in enumerate(prediction):  # image index, image inference
         # Apply constraints
         # x[((x[..., 2:4] < min_wh) | (x[..., 2:4] > max_wh)).any(1), 4] = 0  # width-height
@@ -319,29 +373,26 @@ def non_max_suppression(prediction, conf_thres=0.1, iou_thres=0.6, classes=None,
             x = torch.cat((box[i], x[i, j + 5, None], j[:, None].float()), 1)
         else:  # best class only
             conf, j = x[:, 5:].max(1, keepdim=True)
-            x = torch.cat((box, conf, j.float()), 1)[
-                conf.view(-1) > conf_thres]
+            x = torch.cat((box, conf, j.float()), 1)[conf.view(-1) > conf_thres]
 
         # Filter by class
-        if classes:
+        if classes is not None:
             x = x[(x[:, 5:6] == torch.tensor(classes, device=x.device)).any(1)]
 
         # Apply finite constraint
         # if not torch.isfinite(x).all():
         #     x = x[torch.isfinite(x).all(1)]
 
-        # If none remain process next image
+        # Check shape
         n = x.shape[0]  # number of boxes
-        if not n:
+        if not n:  # no boxes
             continue
-
-        # Sort by confidence
-        # x = x[x[:, 4].argsort(descending=True)]
+        elif n > max_nms:  # excess boxes
+            x = x[x[:, 4].argsort(descending=True)[:max_nms]]  # sort by confidence
 
         # Batched NMS
         c = x[:, 5:6] * (0 if agnostic else max_wh)  # classes
-        # boxes (offset by class), scores
-        boxes, scores = x[:, :4] + c, x[:, 4]
+        boxes, scores = x[:, :4] + c, x[:, 4]  # boxes (offset by class), scores
         i = torchvision.ops.nms(boxes, scores, iou_thres)  # NMS
         if i.shape[0] > max_det:  # limit detections
             i = i[:max_det]
@@ -349,52 +400,47 @@ def non_max_suppression(prediction, conf_thres=0.1, iou_thres=0.6, classes=None,
             # update boxes as boxes(i,4) = weights(i,n) * boxes(n,4)
             iou = box_iou(boxes[i], boxes) > iou_thres  # iou matrix
             weights = iou * scores[None]  # box weights
-            x[i, :4] = torch.mm(weights, x[:, :4]).float(
-            ) / weights.sum(1, keepdim=True)  # merged boxes
+            x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)  # merged boxes
             if redundant:
                 i = i[iou.sum(1) > 1]  # require redundancy
 
         output[xi] = x[i]
         if (time.time() - t) > time_limit:
+            print(f'WARNING: NMS time limit {time_limit}s exceeded')
             break  # time limit exceeded
 
     return output
 
 
-# from utils.general import *; strip_optimizer()
-def strip_optimizer(f='weights/best.pt', s=''):
+def strip_optimizer(f='weights/best.pt', s=''):  # from utils.general import *; strip_optimizer()
     # Strip optimizer from 'f' to finalize training, optionally save as 's'
     x = torch.load(f, map_location=torch.device('cpu'))
-    x['optimizer'] = None
-    x['training_results'] = None
+    for key in 'optimizer', 'training_results', 'wandb_id':
+        x[key] = None
     x['epoch'] = -1
-    x['model'].float()  # to FP16
+    x['model'].half()  # to FP16
     for p in x['model'].parameters():
         p.requires_grad = False
     torch.save(x, s or f)
     mb = os.path.getsize(s or f) / 1E6  # filesize
-    print('Optimizer stripped from %s,%s %.1fMB' %
-          (f, (' saved as %s,' % s) if s else '', mb))
+    print('Optimizer stripped from %s,%s %.1fMB' % (f, (' saved as %s,' % s) if s else '', mb))
 
 
 def print_mutation(hyp, results, yaml_file='hyp_evolved.yaml', bucket=''):
     # Print mutation results to evolve.txt (for use with train.py --evolve)
     a = '%10s' * len(hyp) % tuple(hyp.keys())  # hyperparam keys
     b = '%10.3g' * len(hyp) % tuple(hyp.values())  # hyperparam values
-    # results (P, R, mAP@0.5, mAP@0.5:0.95, val_losses x 3)
-    c = '%10.4g' * len(results) % results
+    c = '%10.4g' * len(results) % results  # results (P, R, mAP@0.5, mAP@0.5:0.95, val_losses x 3)
     print('\n%s\n%s\nEvolved fitness: %s\n' % (a, b, c))
 
     if bucket:
         url = 'gs://%s/evolve.txt' % bucket
         if gsutil_getsize(url) > (os.path.getsize('evolve.txt') if os.path.exists('evolve.txt') else 0):
-            # download evolve.txt if larger than local
-            os.system('gsutil cp %s .' % url)
+            os.system('gsutil cp %s .' % url)  # download evolve.txt if larger than local
 
     with open('evolve.txt', 'a') as f:  # append result
         f.write(c + b + '\n')
-    x = np.unique(np.loadtxt('evolve.txt', ndmin=2),
-                  axis=0)  # load unique rows
+    x = np.unique(np.loadtxt('evolve.txt', ndmin=2), axis=0)  # load unique rows
     x = x[np.argsort(-fitness(x))]  # sort
     np.savetxt('evolve.txt', x, '%10.3g')  # save sort by fitness
 
@@ -403,15 +449,12 @@ def print_mutation(hyp, results, yaml_file='hyp_evolved.yaml', bucket=''):
         hyp[k] = float(x[0, i + 7])
     with open(yaml_file, 'w') as f:
         results = tuple(x[0, :7])
-        # results (P, R, mAP@0.5, mAP@0.5:0.95, val_losses x 3)
-        c = '%10.4g' * len(results) % results
-        f.write('# Hyperparameter Evolution Results\n# Generations: %g\n# Metrics: ' % len(
-            x) + c + '\n\n')
+        c = '%10.4g' * len(results) % results  # results (P, R, mAP@0.5, mAP@0.5:0.95, val_losses x 3)
+        f.write('# Hyperparameter Evolution Results\n# Generations: %g\n# Metrics: ' % len(x) + c + '\n\n')
         yaml.dump(hyp, f, sort_keys=False)
 
     if bucket:
-        os.system('gsutil cp evolve.txt %s gs://%s' %
-                  (yaml_file, bucket))  # upload
+        os.system('gsutil cp evolve.txt %s gs://%s' % (yaml_file, bucket))  # upload
 
 
 def apply_classifier(x, model, img, im0):
@@ -438,17 +481,13 @@ def apply_classifier(x, model, img, im0):
                 im = cv2.resize(cutout, (224, 224))  # BGR
                 # cv2.imwrite('test%i.jpg' % j, cutout)
 
-                # BGR to RGB, to 3x416x416
-                im = im[:, :, ::-1].transpose(2, 0, 1)
-                im = np.ascontiguousarray(
-                    im, dtype=np.float32)  # uint8 to float32
+                im = im[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
+                im = np.ascontiguousarray(im, dtype=np.float32)  # uint8 to float32
                 im /= 255.0  # 0 - 255 to 0.0 - 1.0
                 ims.append(im)
 
-            pred_cls2 = model(torch.Tensor(ims).to(d.device)
-                              ).argmax(1)  # classifier prediction
-            # retain matching class detections
-            x[i] = x[i][pred_cls1 == pred_cls2]
+            pred_cls2 = model(torch.Tensor(ims).to(d.device)).argmax(1)  # classifier prediction
+            x[i] = x[i][pred_cls1 == pred_cls2]  # retain matching class detections
 
     return x
 
