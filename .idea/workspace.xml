@@ -2,7 +2,71 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="67ef000d-be47-4975-a0d1-fded85a8563c" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/back-end/utils/datasets.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/back-end/utils/plots.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/.dockerignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/.gitattributes" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/.github/ISSUE_TEMPLATE/bug-report.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/.github/ISSUE_TEMPLATE/feature-request.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/.github/ISSUE_TEMPLATE/question.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/.github/dependabot.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/.github/workflows/ci-testing.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/.github/workflows/codeql-analysis.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/.github/workflows/greetings.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/.github/workflows/rebase.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/.github/workflows/stale.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/Dockerfile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/detect.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/hubconf.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/common.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/experimental.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/export.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/hub/anchors.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/hub/yolov3-spp.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/hub/yolov3-tiny.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/hub/yolov3.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/hub/yolov5-fpn.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/hub/yolov5-p2.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/hub/yolov5-p6.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/hub/yolov5-p7.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/hub/yolov5-panet.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/yolo.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/yolov5l.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/yolov5m.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/yolov5s.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/models/yolov5x.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/requirements.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/test.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/train.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/tutorial.ipynb" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/utils/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/utils/activations.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/utils/autoanchor.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/utils/datasets.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/utils/general.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/utils/google_app_engine/Dockerfile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/utils/google_app_engine/additional_requirements.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/utils/google_app_engine/app.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/utils/google_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/utils/loss.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/utils/metrics.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/utils/plots.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/utils/torch_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/model-trainer/weights/download_weights.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Yolov5-Flask-VUE-master.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/deployment.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/tmp/draw/test.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/tmp/draw/test.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/back-end/utils/general.py" beforeDir="false" afterPath="$PROJECT_DIR$/back-end/utils/general.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front-end/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/front-end/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/front-end/package.json" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -25,6 +89,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="2GKywaUkDdlzqUSqBkmW7R0WyiN" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/back-end/weights" />
@@ -55,29 +120,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.app">
-    <configuration name="app" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <module name="Yolov5-Flask-VUE-master" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="C:\Users\ASUS\anaconda3\envs\cam_pose\python.exe" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/back-end" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/back-end/app.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager">
     <configuration name="dev" type="js.build_tools.npm" nameIsGenerated="true">
       <package-json value="$PROJECT_DIR$/front-end/package.json" />
       <command value="run" />
@@ -88,15 +131,6 @@
       <envs />
       <method v="2" />
     </configuration>
-    <list>
-      <item itemvalue="npm.dev" />
-      <item itemvalue="Python.app" />
-    </list>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Python.app" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="ServiceViewManager">
     <option name="allServicesViewState">
@@ -129,7 +163,7 @@
       <workItem from="1666853417825" duration="4094000" />
       <workItem from="1667547038389" duration="699000" />
       <workItem from="1667878205194" duration="1992000" />
-      <workItem from="1668063251818" duration="569000" />
+      <workItem from="1668063251818" duration="973000" />
     </task>
     <task id="LOCAL-00001" summary="unknown">
       <created>1666516419038</created>
@@ -166,7 +200,14 @@
       <option name="project" value="LOCAL" />
       <updated>1666752072921</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="s">
+      <created>1668063842478</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1668063842478</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -189,7 +230,8 @@
     <MESSAGE value="unknown" />
     <MESSAGE value="base demo" />
     <MESSAGE value="version 1" />
-    <option name="LAST_COMMIT_MESSAGE" value="version 1" />
+    <MESSAGE value="s" />
+    <option name="LAST_COMMIT_MESSAGE" value="s" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/detection$app.coverage" NAME="app Coverage Results" MODIFIED="1667980690493" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/back-end" />
