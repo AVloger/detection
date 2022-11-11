@@ -3,7 +3,7 @@
     <div
         style="margin: 150px auto; background-color: #fff; width: 350px; height: 350px; padding: 20px; border-radius: 20px;
                 box-shadow: 20px 20px 20px rgba(0,0,0,0.3); opacity: 1.0;">
-      <div style="margin: 5px 0; text-align: center; font-size: 24px"><b>目标检测与测距系统</b></div>
+      <div style="margin: 5px 0; text-align: center; font-size: 24px"><b>掘进面智能视频识别系统</b></div>
       <div style="margin: 20px 0; text-align: center; font-size: 24px"><b>登 录</b></div>
       <el-form :model="user" :rules="rules" ref="userForm">
         <el-form-item prop="username">
@@ -47,7 +47,7 @@ export default {
           this.request.post("/user/login", this.user).then(res => {
             if (res.code === '200') {
               localStorage.setItem("user", JSON.stringify(res.data))  // 存储用户信息到浏览器
-              this.$router.push("/")
+              this.$router.push("/home")
               this.$message.success("登录成功")
             } else {
               this.$message.error(res.msg)

@@ -7,13 +7,14 @@ import './assets/global.css'
 import request from "./utils/request";
 import request1 from "./utils/request1";
 import store from './store'
+import vuePopper from "element-ui/src/utils/vue-popper";
 
 Vue.config.productionTip = false
 
 Vue.use(ElementUI, {size: "mini"});
 
 Vue.prototype.request = request
-Vue.prototype.request1 = request1
+Vue.prototype.$api = request1
 
 new Vue({
     router,
