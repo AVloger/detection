@@ -33,7 +33,7 @@
       </el-menu-item>
       <el-menu-item index="/webcamera">
         <i class="el-icon-view"></i>
-        <span slot="title">网络摄像头</span>
+        <span slot="title">目标检测</span>
       </el-menu-item>
     </el-submenu>
   </el-menu>

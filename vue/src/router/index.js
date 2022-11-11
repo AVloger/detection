@@ -8,12 +8,12 @@ const routes = [
     {
         path: '/',
         component: () => import('../views/Manage.vue'),
-        redirect: "/home",
+        redirect: "/login",
         children: [
             {path: 'home', name: '首页', component: () => import('../views/Home.vue')},
             {path: 'user', name: '用户管理', component: () => import('../views/User.vue')},
             {path: 'person', name: '个人信息', component: () => import('../views/Person.vue')},
-            {path: 'webcamera', name: '网络摄像头', component: () => import('../views/WebCamera.vue')},
+            {path: 'webcamera', name: '目标检测', component: () => import('../views/WebCamera.vue')},
             
         ]
     },
