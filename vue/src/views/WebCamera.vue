@@ -130,7 +130,7 @@ export default {
       if (this.isImg) {
         this.photograph();
       }
-    }, 1000);
+    }, 200);
   },
 
   methods: {
