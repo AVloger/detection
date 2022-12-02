@@ -14,7 +14,7 @@
                     v-model="user.password"></el-input>
         </el-form-item>
         <el-form-item style="margin: 10px 0; text-align: right">
-          <el-button type="warning" size="small" autocomplete="off" @click="$router.push('/register')">注册</el-button>
+          <el-button type="warning" size="small" autocomplete="off" @click="register">注册</el-button>
           <el-button type="primary" size="small" autocomplete="off" @click="login">登录</el-button>
         </el-form-item>
       </el-form>
@@ -41,12 +41,16 @@ export default {
     }
   },
   methods: {
+    register(){
+      this.$router.push('/register').catch(err => { console.log(err) })
+    },
     login() {
       this.$refs['userForm'].validate((valid) => {
         if (valid) {  // 表单校验合法
           this.request.post("/user/login", this.user).then(res => {
             if (res.code === '200') {
               localStorage.setItem("user", JSON.stringify(res.data))  // 存储用户信息到浏览器
+              localStorage.setItem("token", res.data.token)
               this.$router.push("/home")
               this.$message.success("登录成功")
             } else {
