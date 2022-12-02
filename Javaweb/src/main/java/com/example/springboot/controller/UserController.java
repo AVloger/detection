@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 import java.net.URLEncoder;
@@ -196,6 +197,11 @@ public class UserController {
     public Result uploadImg(MultipartFile file) throws Exception {
         return Result.success(true);
     }
-
+    @GetMapping("/checkToken")
+    public Boolean checkToken(HttpServletRequest request){
+        System.out.println("前端访问页面验证token");
+        String token = request.getHeader("token");
+        return TokenUtils.checkToken(token);
+    }
 }
 
