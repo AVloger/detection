@@ -14,8 +14,8 @@ const routes = [
             {path: 'home', name: '首页', component: () => import('../views/Home.vue')},
             {path: 'user', name: '用户管理', component: () => import('../views/User.vue')},
             {path: 'person', name: '个人信息', component: () => import('../views/Person.vue')},
-            {path: 'webcamera', name: '目标检测', component: () => import('../views/WebCamera.vue')},
-            
+            {path: 'webcamera', name: '实时检测', component: () => import('../views/WebCamera.vue')},
+            {path: 'upload', name: '离线检测', component: () => import('../views/Upload.vue')},
         ]
     },
     {
@@ -32,6 +32,11 @@ const routes = [
         path: '/register',
         name: 'Register',
         component: () => import('../views/Register.vue')
+    },
+    {
+        path: '/upload',
+        name: 'upload',
+        component: () => import('../views/Upload.vue')
     }
 ]
 

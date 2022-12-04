@@ -33,7 +33,11 @@
       </el-menu-item>
       <el-menu-item index="/webcamera">
         <i class="el-icon-view"></i>
-        <span slot="title">目标检测</span>
+        <span slot="title">实时检测</span>
+      </el-menu-item>
+      <el-menu-item index="/upload">
+        <i class="el-icon-view"></i>
+        <span slot="title">离线检测</span>
       </el-menu-item>
     </el-submenu>
   </el-menu>
