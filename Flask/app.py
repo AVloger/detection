@@ -109,6 +109,24 @@ def upload_file():
     #
     # return jsonify({'status': 0})
 
+from werkzeug.utils import secure_filename
+@app.route('/uploadVideo', methods=['GET', 'POST'])
+def upload_video():
+    # if request.method == 'POST':
+    # 这样获取就可以了
+    store_file_path = 'C:\\Users\\ASUS\\Desktop\\detection\\Flask\\tmp\\'
+    file_buffer = request.files['file']
+    f_name = secure_filename(file_buffer.filename)
+    data = {"code": 500, "msg": "上传失败！"}
+    try:
+        file_buffer.save(store_file_path + f_name)
+        data.update({"code": 200, "msg": "上传成功！", "Data": 'http://127.0.0.1:5003/tmp/' + f_name})
+    except FileNotFoundError as e:
+        print(e)
+    return jsonify(data)
+    return
+
+
 
 @app.route("/download", methods=['GET'])
 def download_file():
