@@ -9,6 +9,7 @@ from datetime import timedelta
 from flask import *
 from processor.AIDetector_pytorch import Detector
 import cv2
+from pathlib import Path
 import numpy as np
 import core.main
 from flask_cors import CORS
@@ -43,6 +44,61 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(seconds=1)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+VID_FORMATS = ('.mov', '.avi', '.mp4', '.mpg',  '.mpeg', '.m4v', '.wmv', '.mkv', '.mp3')
+PHOTO_FORMATS = ('.jpg')
+
+
+def videos2images(video_dir_path, root_save_dir):
+    # 1.检测读取文件路径是否正确
+    path_video = Path(video_dir_path)
+    if path_video.is_dir():
+        print(video_dir_path + '\t ok')
+        videos = os.listdir(video_dir_path)
+    else:
+        print('\033[31mLine36 error: \033[31m' + video_dir_path + 'is not exist!')
+        return
+
+    # 2. 生成存储文件夹
+    save_name_dir = Path(path_video.name)
+    save_name_dir = os.path.join(root_save_dir, save_name_dir)
+    if not os.path.exists(save_name_dir):
+        os.makedirs(save_name_dir)
+
+    file_count = 0
+    for video in videos:
+        # 判断是否为视频文件,如果不是视频文件则跳过并进行说明
+        if Path(video).suffix in VID_FORMATS:
+            file_count += 1  # 视频文件数+1
+            save_jpg_dir = os.path.join(save_name_dir, Path(video).stem)
+            each_video_path = os.path.join(path_video, video)
+            save_dir = save_jpg_dir
+        else:
+            print('\033[33mLine56 warning: \033[33m' + os.path.basename(video) + ' is not a video file, so skip.')
+            continue
+
+        # 3. 开始转换。打印正在处理文件的序号和他的文件名，并开始转换
+        print('\033[38m' + str(file_count) + ':' + Path(video).stem + '\033[38m')
+        cap = cv2.VideoCapture(each_video_path)
+
+        flag = cap.isOpened()
+        if not flag:
+            print("\033[31mLine 65 error\033[31m: open" + each_video_path + "error!")
+
+        frame_count = 0  # 给每一帧标号
+        while True:
+            frame_count += 1
+            flag, frame = cap.read()
+            if not flag:  # 如果已经读取到最后一帧则退出
+                break
+            if os.path.exists(
+                    save_dir + str(frame_count) + '.jpg'):  # 在源视频不变的情况下，如果已经创建，则跳过
+                break
+            cv2.imwrite(save_dir + '\\' + str(frame_count) + '.jpg', frame)
+
+        cap.release()
+        print('\033[38m' + Path(video).stem + ' save to ' + save_dir + 'finished. \033[38m')  # 表示一个视频片段已经转换完成
+
 
 
 @app.route('/')
@@ -118,13 +174,41 @@ def upload_video():
     file_buffer = request.files['file']
     f_name = secure_filename(file_buffer.filename)
     data = {"code": 500, "msg": "上传失败！"}
+    video_path_list = store_file_path
+
+    # 预期存储在的主文件夹，即'result'文件夹下
+    image_save_dir = store_file_path+'photo\\'
+    path_save = Path(image_save_dir)
+    if not path_save.exists():
+        path_save.mkdir()
+    # 进行转换
+    videos2images(video_path_list, image_save_dir)
+
+    file_dir = image_save_dir + 'uploads\\'
+    list = []
+    for root ,dirs, files in os.walk(file_dir):
+        for file in files:
+            list.append(file)      # 获取目录下文件名列表
+
+    video = cv2.VideoWriter(store_file_path + 'test.mp4',cv2.VideoWriter_fourcc('m', 'p', '4', 'v'),5,(1981,991))
+
+    for i in range(1,len(list)):
+        img = file_dir + f_name+'\\'+str(i)+'.jpg'
+        image_info,img_y = core.predict.my_predict(img,current_app.model)
+        infos = []
+        for info in image_info:
+            infos.append({"object":info,"confidence":image_info[info][1]})
+        print(infos)
+        img_y = cv2.resize(img_y,(1981,991)) #将图片转换为1280*720像素大小
+        video.write(img_y) # 写入视频
+    # 释放资源
+    video.release()
     try:
-        file_buffer.save(store_file_path + f_name)
-        data.update({"code": 200, "msg": "上传成功！", "Data": 'http://127.0.0.1:5003/tmp/' + f_name})
+        file_buffer.save(store_file_path + 'test.mp4')
+        data.update({"code": 200, "msg": "上传成功！", "Data": 'http://127.0.0.1:5003/tmp/' + 'test.mp4'})
     except FileNotFoundError as e:
         print(e)
     return jsonify(data)
-    return
 
 
 
