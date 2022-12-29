@@ -78,13 +78,13 @@ export default {
   methods: {
     //上传前回调
     beforeUploadVideo(file) {
-      var fileSize = file.size / 1024 / 1024 < 50;
+      var fileSize = file.size / 1024 / 1024 < 200;
       if (['video/mp4', 'video/ogg', 'video/flv', 'video/avi', 'video/wmv', 'video/rmvb', 'video/mov'].indexOf(file.type) == -1) {
         this.$message.info("请上传正确的视频格式");
         return false;
       }
       if (!fileSize) {
-        this.$message.info("视频大小不能超过50MB");
+        this.$message.info("视频大小不能超过200MB");
         return false;
       }
       this.isShowUploadVideo = false;
@@ -101,7 +101,7 @@ export default {
 
     //上传成功回调
     handleVideoSuccess(res, file) {
-      this.$message.info("回调函数")
+      this.$message.info("上传视频成功")
       this.isShowUploadVideo = true;
       this.videoFlag = false;
       this.videoUploadPercent = 0;

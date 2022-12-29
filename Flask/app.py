@@ -60,8 +60,7 @@ def videos2images(video_dir_path, root_save_dir):
         return
 
     # 2. 生成存储文件夹
-    save_name_dir = Path(path_video.name)
-    save_name_dir = os.path.join(root_save_dir, save_name_dir)
+    save_name_dir = root_save_dir
     if not os.path.exists(save_name_dir):
         os.makedirs(save_name_dir)
 
@@ -73,6 +72,8 @@ def videos2images(video_dir_path, root_save_dir):
             save_jpg_dir = os.path.join(save_name_dir, Path(video).stem)
             each_video_path = os.path.join(path_video, video)
             save_dir = save_jpg_dir
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
         else:
             print('\033[33mLine56 warning: \033[33m' + os.path.basename(video) + ' is not a video file, so skip.')
             continue
@@ -86,15 +87,20 @@ def videos2images(video_dir_path, root_save_dir):
             print("\033[31mLine 65 error\033[31m: open" + each_video_path + "error!")
 
         frame_count = 0  # 给每一帧标号
+        img_index = 0
         while True:
             frame_count += 1
             flag, frame = cap.read()
             if not flag:  # 如果已经读取到最后一帧则退出
                 break
+            if frame_count%30 != 0:
+                continue
             if os.path.exists(
-                    save_dir + str(frame_count) + '.jpg'):  # 在源视频不变的情况下，如果已经创建，则跳过
+                    save_dir + str(img_index) + '.jpg'):  # 在源视频不变的情况下，如果已经创建，则跳过
+                img_index += 1
                 break
-            cv2.imwrite(save_dir + '\\' + str(frame_count) + '.jpg', frame)
+            cv2.imwrite(save_dir + '\\' + str(img_index) + '.jpg', frame)
+            img_index += 1
 
         cap.release()
         print('\033[38m' + Path(video).stem + ' save to ' + save_dir + 'finished. \033[38m')  # 表示一个视频片段已经转换完成
@@ -175,39 +181,40 @@ def upload_video():
     f_name = secure_filename(file_buffer.filename)
     data = {"code": 500, "msg": "上传失败！"}
     video_path_list = store_file_path
-
+    try:
+        file_buffer.save(store_file_path + file_buffer.filename)
+    except FileNotFoundError as e:
+        print(e)
     # 预期存储在的主文件夹，即'result'文件夹下
-    image_save_dir = store_file_path+'photo\\'
+    image_save_dir = store_file_path + 'photo\\'
     path_save = Path(image_save_dir)
     if not path_save.exists():
         path_save.mkdir()
     # 进行转换
     videos2images(video_path_list, image_save_dir)
 
-    file_dir = image_save_dir + 'uploads\\'
+    file_dir = image_save_dir + '\\' + f_name[:-4]
     list = []
-    for root ,dirs, files in os.walk(file_dir):
+    for root, dirs, files in os.walk(file_dir):
         for file in files:
-            list.append(file)      # 获取目录下文件名列表
+            list.append(file)  # 获取目录下文件名列表
 
-    video = cv2.VideoWriter(store_file_path + 'test.mp4',cv2.VideoWriter_fourcc('m', 'p', '4', 'v'),5,(1981,991))
+    video = cv2.VideoWriter(store_file_path + 'test.mp4', cv2.VideoWriter_fourcc('H', '2', '6', '4'), 5,
+                            (1280, 720))
 
-    for i in range(1,len(list)):
-        img = file_dir + f_name+'\\'+str(i)+'.jpg'
-        image_info,img_y = core.predict.my_predict(img,current_app.model)
+    for i in range(1, len(list)):
+        img = file_dir + '\\' + str(i) + '.jpg'
+        image_info, img_y = core.predict.my_predict(img, current_app.model)
         infos = []
         for info in image_info:
-            infos.append({"object":info,"confidence":image_info[info][1]})
+            infos.append({"object": info, "confidence": image_info[info][1]})
         print(infos)
-        img_y = cv2.resize(img_y,(1981,991)) #将图片转换为1280*720像素大小
-        video.write(img_y) # 写入视频
+        img_y = cv2.resize(img_y, (1280, 720))  # 将图片转换为1280*720像素大小
+        video.write(img_y)  # 写入视频
     # 释放资源
     video.release()
-    try:
-        file_buffer.save(store_file_path + 'test.mp4')
-        data.update({"code": 200, "msg": "上传成功！", "Data": 'http://127.0.0.1:5003/tmp/' + 'test.mp4'})
-    except FileNotFoundError as e:
-        print(e)
+    data.update({"code": 200, "msg": "上传成功！", "Data": 'http://127.0.0.1:5003/tmp/' + 'test.mp4'})
+
     return jsonify(data)
 
 
