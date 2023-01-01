@@ -10,10 +10,18 @@ npm install
 npm run serve
 ```
 ## JAVA of backend
+
+## javaweb
+
 ```
 java SpringbootApplication.java
 ```
+## sql
+
+the create sql file is located in javaweb/create.sql
+
 ## Flask of backend
+
 ```
 python3 app.py
 ```
