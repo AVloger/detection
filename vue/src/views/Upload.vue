@@ -1,5 +1,5 @@
 <template>
-  <div class="album albumvideo">
+  <div class="left-container">
     <div>
 
       <div class="pic_img">
@@ -50,10 +50,23 @@
         </div>
       </div>
     </div>
+
     <p class="Upload_pictures">
       <span></span>
       <span>最多可以上传1个视频，建议大小50M，推荐格式mp4</span>
     </p>
+    
+    <div class="detection-types">
+      <el-card class="box-card">
+        <div slot="header" class="clearfix">
+          <span style="font-size: 25px;">检测目标类别</span>
+          <el-button @click="confirm_targets" style="float: right; padding: 3px 0; height: 30px; font-size: 20px" type="text">确认选择</el-button>
+        </div>
+        <el-checkbox-group v-model="checkList">
+          <el-checkbox v-for="target in target_names" :label="target" :key=target></el-checkbox>
+        </el-checkbox-group>
+      </el-card>
+    </div>
   </div>
 </template>
 
@@ -72,10 +85,17 @@ export default {
       //显示上传按钮
       videoForm: {
         showVideoPath: ''
-      }
+      },
+      target_names: [
+        '工人', '手机', '香烟', '安全帽', '文件夹', '掘进机', '转载机', '钥匙', '烟雾', '红绿灯', '胶轮车'
+      ],
+      checkList: ['工人']
     }
   },
   methods: {
+    confirm_targets(){
+      this.$message({type:"success", message:`已选择: ${this.checkList}`})
+    },
     //上传前回调
     beforeUploadVideo(file) {
       var fileSize = file.size / 1024 / 1024 < 200;
@@ -163,4 +183,29 @@ export default {
   height: 230px;
   background: #ffffff;
 }
+
+.Upload_pictures {
+  margin-top: 250px;
+  display: flex; flex-direction: row;
+  justify-content: center;
+}
+
+.detection-types {
+  display: flex;
+  flex-direction: column;
+
+  /* position: relative; */
+  /* top: 00px;  */
+  width: 1000px;
+  justify-content: start;
+  margin-left: 25px; margin-top: 20px;
+}
+
+.left-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  margin-left: 20px;
+}
+
 </style>
